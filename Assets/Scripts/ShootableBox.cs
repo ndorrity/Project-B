@@ -1,21 +1,24 @@
 using UnityEngine;
-using System.Collections;
 
-public class ShootableBox : MonoBehaviour {
-
-    //The box's current health point total
+public class ShootableBox : MonoBehaviour 
+{
+    [Header("Health Settings")]
     public int currentHealth = 3;
 
     public void Damage(int damageAmount)
     {
-        //subtract damage amount when Damage function is called
         currentHealth -= damageAmount;
 
-        //Check if health has fallen below zero
-        if (currentHealth <= 0) 
+        if (currentHealth <= 0)
         {
-            //if health has fallen below zero, deactivate it 
-            gameObject.SetActive (false);
+            // Inform the spawner to decrement active count and check for victory
+            if (EnemySpawner.Instance != null)
+            {
+                EnemySpawner.Instance.OnEnemyKilled();
+            }
+
+            // Remove the eliminated NPC or target from the scene
+            Destroy(gameObject);
         }
     }
 }
