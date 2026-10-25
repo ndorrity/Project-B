@@ -9,67 +9,56 @@ public class EnemyAI : MonoBehaviour
     public float attackRange = 2.0f;
 
     [Header("Combat")]
-    public float attackDamage = 15f;
-    public float attackRate = 1.0f; // Attack every 1 second
+    public int attackDamage = 15;
+    public float attackRate = 1.0f;
 
-    private Transform player;
-    private PlayerHealth playerHealth;
     private NavMeshAgent agent;
+    private Transform playerTransform;
+    private PlayerHealth playerHealth;
     private float nextAttackTime = 0f;
 
     void Start()
     {
         agent = GetComponent<NavMeshAgent>();
         agent.speed = moveSpeed;
-        agent.stoppingDistance = attackRange - 0.3f;
+        agent.stoppingDistance = attackRange * 0.8f;
 
-        // Find the player object tagged "Player"
         GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
         if (playerObj != null)
         {
-            player = playerObj.transform;
+            playerTransform = playerObj.transform;
             playerHealth = playerObj.GetComponent<PlayerHealth>();
-        }
-        else
-        {
-            Debug.LogError("EnemyAI: Could not find any GameObject tagged 'Player'!");
         }
     }
 
     void Update()
     {
-        if (player == null || !agent.isOnNavMesh) return;
+        if (playerTransform == null || Time.timeScale == 0f) return;
 
-        float distance = Vector3.Distance(transform.position, player.position);
+        float distanceToPlayer = Vector3.Distance(transform.position, playerTransform.position);
 
-        if (distance > attackRange)
+        // Keep pursuing the player
+        if (agent.isOnNavMesh)
         {
-            // Move toward player
-            agent.isStopped = false;
-            agent.SetDestination(player.position);
+            agent.SetDestination(playerTransform.position);
         }
-        else
+
+        // Attack when within range
+        if (distanceToPlayer <= attackRange)
         {
-            // In range: stop and attack
-            agent.isStopped = true;
-
-            // Rotate smoothly to face player
-            Vector3 lookDirection = (player.position - transform.position).normalized;
-            lookDirection.y = 0;
-            if (lookDirection != Vector3.zero)
-            {
-                transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(lookDirection), Time.deltaTime * 6f);
-            }
-
-            // Attack on cooldown
             if (Time.time >= nextAttackTime)
             {
                 nextAttackTime = Time.time + attackRate;
-                if (playerHealth != null)
-                {
-                    playerHealth.TakeDamage(attackDamage);
-                }
+                AttackPlayer();
             }
+        }
+    }
+
+    void AttackPlayer()
+    {
+        if (playerHealth != null)
+        {
+            playerHealth.TakeDamage(attackDamage);
         }
     }
 }

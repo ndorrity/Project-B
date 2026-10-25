@@ -4,11 +4,13 @@ using UnityEngine.UI;
 public class PlayerHealth : MonoBehaviour
 {
     [Header("Health Settings")]
-    public float maxHealth = 100f;
-    public float currentHealth;
+    public int maxHealth = 100;
+    public int currentHealth;
 
-    [Header("UI Reference")]
+    [Header("Optional UI")]
     public Slider healthSlider;
+
+    private bool isDead = false;
 
     void Start()
     {
@@ -21,10 +23,12 @@ public class PlayerHealth : MonoBehaviour
         }
     }
 
-    public void TakeDamage(float amount)
+    public void TakeDamage(int damageAmount)
     {
-        currentHealth -= amount;
-        currentHealth = Mathf.Clamp(currentHealth, 0, maxHealth);
+        if (isDead) return;
+
+        currentHealth -= damageAmount;
+        Debug.Log($"Player took {damageAmount} damage. Remaining HP: {currentHealth}");
 
         if (healthSlider != null)
         {
@@ -37,10 +41,20 @@ public class PlayerHealth : MonoBehaviour
         }
     }
 
-    void Die()
+    private void Die()
     {
-        Debug.Log("Player eliminated!");
-        // Reload scene, show game over screen, or freeze controls here
-    }
+        if (isDead) return;
+        isDead = true;
 
+        Debug.Log("Player has died. Triggering Game Over screen.");
+
+        if (MenuManager.Instance != null)
+        {
+            MenuManager.Instance.ShowGameOver();
+        }
+        else
+        {
+            Debug.LogError("PlayerHealth: MenuManager.Instance is null!");
+        }
+    }
 }
